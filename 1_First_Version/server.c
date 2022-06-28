@@ -97,6 +97,9 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        // Informando o cliente conectado - printf()
+        printf("Cliente-IP conectado: %d\n", inet_ntoa(server_addr.sin_addr));
+
         // Recebe o pedido do cliente - recv()
         char buffer[BUFFERSIZE]; //Buffer de recebimento
         memset(buffer, '\0', BUFFERSIZE); //Zera o buffer

@@ -4,7 +4,7 @@ A primeira versão deve corresponder a um servidor capaz de tratar conexões con
 
 ## Observações
 
-*Observações pertinentes sobre o processo de compilação e execução do servidor.*
+Nessa primeira versão ainda não foi utilizada a biblioteca pthreads.h para permitir que o servidor trate de forma concorrente vários clientes. Até o momento, o servidor só trata requisições de GET.
 
 ## Afirmação
 
@@ -13,6 +13,7 @@ A primeira versão deve corresponder a um servidor capaz de tratar conexões con
 ## Referências
 
 https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa
+
 https://trungams.github.io/2020-08-23-a-simple-http-server-from-scratch/
 
 ## Informação sobre o grupo
