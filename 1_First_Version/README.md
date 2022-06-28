@@ -12,7 +12,8 @@ A primeira versão deve corresponder a um servidor capaz de tratar conexões con
 
 ## Referências
 
-Qualquer referência ou utilização de trechos de códigos da Internet, é preciso referenciá-los aqui.
+https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa
+https://trungams.github.io/2020-08-23-a-simple-http-server-from-scratch/
 
 ## Informação sobre o grupo
 
