@@ -1,3 +1,45 @@
+/** UNIPAMPA - Universidade Federal do Pampa
+  * Curso: Engenharia de Computação
+  * Disciplina: Redes de Computadores
+  * Professor: Leonardo Bidesse Pinho
+  * Alunos:
+  *      - Lucas Vilanova Barcellos Matricula: 1902450007
+  *      - Renato Sayyed de Souza   Matricula: 1901560699
+  *      - Willian Silva Domingues  Matricula: 1901570513
+  * Servidor HTTP | 1.0 and 1.1 with QoS
+**/
+
+/*********
+ * BIBLIOTECAS - FUNCTIONS
+ * # sys/socket.h - socket(int domain, int type, int protocol)
+ * - domain: Domínio do protocolo (IPv4 ou IPv6)
+ * - type: Tipo de socket.
+ * - protocol: Protocolo utilizado.
+ * # sys/socket.h - bind(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen)
+ * - sockfd: Descritor do socket.
+ * - my_addr: Endereço do socket.
+ * - addrlen: Tamanho do endereço do socket.
+ * # sys/socket.h - listen(int sockfd, int backlog)
+ * - sockfd: Descritor do socket.
+ * - backlog: Número máximo de conexões pendentes.
+ * # sys/socket.h - accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+ * - sockfd: Descritor do socket.
+ * - addr: Endereço do socket.
+ * - addrlen: Tamanho do endereço do socket.
+ * # sys/socket.h - recv(int sockfd, void *buf, size_t len, int flags)
+ * - sockfd: Descritor do socket.
+ * - buf: Buffer de recebimento.
+ * - len: Tamanho do buffer de recebimento.
+ * - flags: Flags de recebimento. (-1 para erro, 0 para sucesso).
+ * # sys/socket.h - send(int sockfd, const void *buf, size_t len, int flags)
+ * - sockfd: Descritor do socket.
+ * - buf: Buffer de envio.
+ * - len: Tamanho do buffer de envio.
+ * - flags: Flags de envio. (-1 para erro, 0 para sucesso).
+ * # sys/socket.h - close(int sockfd)
+ * - sockfd: Descritor do socket.
+********/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
