@@ -56,6 +56,7 @@
 double http_version;
 int client_count;
 int MAX_CLIENTS;
+int *max_bandwidth;
 
 int create_server_socket(struct sockaddr_in *server_addr, int port)
 {
@@ -78,7 +79,7 @@ int create_server_socket(struct sockaddr_in *server_addr, int port)
 
     if (http_version == 1.1) // Configura o socket do servidor para se manter vivo durante o tempo de espera - setsockopt()
     {
-        int keepalive = 10;
+        int keepalive = 1;
         if (setsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0)
         {
             perror("setsockopt()");
@@ -131,14 +132,24 @@ int accept_client_connection(int server_socket)
         exit(EXIT_FAILURE);
     }
 
-    // Mostra o IP e a porta do cliente - gethostbyaddr()
+    // Mostra o IP e a porta do cliente
     struct hostent *host_info = gethostbyaddr((char *)&client_addr.sin_addr.s_addr, sizeof(client_addr.sin_addr.s_addr), AF_INET);
     if (host_info == NULL)
     {
         perror("gethostbyaddr()");
         exit(EXIT_FAILURE);
     }
-    printf("\nConexão aceita de %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+    printf("\nCliente conectado em %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+
+    if (http_version == 1.1) // Configura o socket do cliente para se manter vivo durante o tempo de espera - setsockopt()
+    {
+        int keepalive = 1;
+        if (setsockopt(client_socket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)) < 0)
+        {
+            perror("setsockopt()");
+            exit(EXIT_FAILURE);
+        }  
+    }
 
     return client_socket;
 }
@@ -154,29 +165,31 @@ char *receive_request(int client_socket)
         exit(EXIT_FAILURE);
     }
 
-    // Confirma o pedido do cliente - send()
-    if (send(client_socket, SERVERNAME, strlen(SERVERNAME), 0) < 0)
-    {
-        perror("send()");
-        exit(EXIT_FAILURE);
-    }
-
     return request;
 }
 
 int sendall(int s, char *buf, long int *len, char *path)
 {
-    int total = 0;        // how many bytes we've sent
-    long int bytesleft = *len; // how many we have left to send
-    int n;
+    long int total = 0;        // how many bytes we've sent
+    long int n;
+    long int bytes_left = *len; // how many we have left to send
+    int client_bandwidth = max_bandwidth[client_count]; 
 
-    printf("\nEnviando arquivo %s - SIZE -> %ld\n", path, *len);
-
+    printf("\nEnviando o arquivo %s - SIZE -> %ld\n", path, *len);
+    
     while(total < *len) {
-        n = send(s, buf+total, bytesleft, 0);
-        if (n == -1) { break; }
+        
+        //Controlando a quantidade de bytes a serem enviados
+        if (bytes_left > client_bandwidth) {
+            n = send(s, buf + total, client_bandwidth, 0);
+        } else {
+            n = send(s, buf + total, bytes_left, 0);
+        }
+
+        if (n == -1) break;
+
         total += n;
-        bytesleft -= n;
+        bytes_left -= n;
     }
 
     *len = total; // return number actually sent here
@@ -280,8 +293,12 @@ void handle_request(char *request, int client_socket)
         if (sendall(client_socket, buffer, &length, path) != 0)
         {
             perror("sendall");
-            printf("\nWe only sent %ld bytes because of the error!\n", length);
+            printf("\nArquivo não pode ser enviado por completo\n");
         }
+        else
+        {
+            printf("\nArquivo enviado com sucesso\n");
+        }	
 
         free(buffer); //Libera o buffer de conteúdo
     }
@@ -322,14 +339,11 @@ void http_execution(int client_socket)
     // HTTP/1.1
     else if (http_version == 1.1)
     {
-        // Recebe n pedidos do cliente
-        int n_requests = 0;
         char *request = receive_request(client_socket);
         while (strcmp(request, "") != 0)
         {
             handle_request(request, client_socket);
             free(request);
-            n_requests++;
             request = receive_request(client_socket);
         }
 
@@ -370,20 +384,43 @@ void in_thread(int server_socket)
     }
 }
 
+int valida_argv(char *argv[]){
+    if(argv[1] == NULL){
+        printf("A versão para o servidor HTTP não foi informada.\n");
+        return 0;
+    } else if(argv[2] == NULL){
+        printf("A porta utilizada para conexão com o servidor não foi informada.\n");        
+        return 0;
+    } else if(argv[3] == NULL){
+        printf("A quantidade máxima de clientes possíveis conectados ao servidor não foi informada\n");
+        return 0;
+    }
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
-    int port = atoi(argv[1]);
+    if(!valida_argv(argv)) return 0;
 
     // Define a versão do protocolo HTTP - 1.0 ou 1.1 vindo do argumento do programa
-    http_version = atoi(argv[2]);
+    http_version = atoi(argv[1]);
     if (http_version != 1.0 && http_version != 1.1)
     {
         printf("\nVersão do protocolo HTTP inválida!\n");
         exit(EXIT_FAILURE);
     }
 
+    int port = atoi(argv[2]);
+
     // Define a quantidade de clientes que podem se conectar ao servidor - MAX_CLIENTS
     MAX_CLIENTS = atoi(argv[3]);
+
+    // Criando o vetor para saber o bandwidth dos usuários - bandwidth
+    max_bandwidth = malloc(MAX_CLIENTS * sizeof(int));
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        max_bandwidth[i] = 1000000;
+    }
 
     struct sockaddr_in server_addr;
     int server_socket = create_server_socket(&server_addr, port);
